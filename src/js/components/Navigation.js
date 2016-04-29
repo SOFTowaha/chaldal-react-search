@@ -1,0 +1,146 @@
+import React from "react"
+import jsonQ from "jsonq"
+
+export default class Navigation extends React.Component {
+
+	renderNav() {
+		var rows = [];
+
+		var filteredData = this.filterNav(this.props.navigations, this.props.searchText);
+		var navigation = this.generateTree(filteredData);
+
+		return this.generateElem(navigation.children);
+	}
+
+	/**
+	 * Filter Navigation with search text
+	 */
+	filterNav(navData, filterText) {
+
+		var searchText = filterText.toLowerCase();
+		//var nav = jsonQ(navData);
+		if( searchText == '' ) {
+			return navData;
+		}
+		// find all parent items
+		var parentNav = [];
+		var matchNav = [];
+		navData.forEach((nav,key)=>{
+
+			if( nav.ParentCategoryId == 0 ) {
+				parentNav.push(nav);
+			}
+
+			if( nav.Name.toLowerCase().indexOf(searchText) !== -1 ) {
+				matchNav.push(nav);
+			}
+			
+		});
+
+
+
+		// Find parents of matched nav
+		var machedParentNav = [];
+		
+		if( matchNav.length > 0 ) {
+			matchNav.forEach((matchedItem)=>{
+				// Parent item - don't need find parent
+				if( matchedItem.ParentCategoryId == 0 ){
+					return;
+				}
+
+
+
+				navData.forEach((item)=>{
+					// Ignore top level items
+					if( item.ParentCategoryId == 0 ) {
+						return;
+					}
+					if( item.Id == matchedItem.ParentCategoryId ) {
+						machedParentNav.push(item);
+						//findParent(data, item);
+					}
+				})
+
+			})
+		}
+
+		navData = jsonQ.union(parentNav,machedParentNav,matchNav);
+		//console.log(navData);
+	
+		return navData;
+	}
+
+
+	/**
+	 * Find parent of mached nav item
+	 */
+	
+
+
+
+	/**
+	 * Generate Tree JSON tree to produce multi level nav
+	 */
+	generateTree(data) {
+
+	    // build hierarchical source.
+	    var map = {}
+	    for(var i = 0; i < data.length; i++){
+	        var obj = data[i]
+	        if(!(obj.Id in map)){
+	            map[obj.Id] = obj
+	            map[obj.Id].children = []
+	        }
+
+	        if(typeof map[obj.Id].Name == 'undefined'){
+	            map[obj.Id].Id = obj.Id
+	            map[obj.Id].Name = obj.Name
+	            map[obj.Id].ParentCategoryId= obj.ParentCategoryId
+	        }
+
+	        var parent = obj.ParentCategoryId || '-';
+	        if(!(parent in map)){
+	            map[parent] = {}
+	            map[parent].children = []
+	        }
+
+	        map[parent].children.push(map[obj.Id])
+	    }
+	    return map['-']
+	}
+
+
+
+
+	/**
+	 *	Generate actual Dom element from JSON Tree
+	 */
+	generateElem(item) {
+
+		var rows = [];
+
+		item.forEach((nav,key) => {
+			var child = '';
+
+			if( nav.children && nav.children.length > 0 ) {
+				var child = this.generateElem(nav.children);
+			}
+
+			rows.push(<li>{nav.Name}{child}</li>);
+		});
+
+		return (<ul>{rows}</ul>)
+
+	}
+
+
+
+	render() {
+		return (
+			<ul>
+				{this.renderNav()}
+			</ul>
+		);
+	}
+}
