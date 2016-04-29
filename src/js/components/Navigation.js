@@ -72,10 +72,6 @@ export default class Navigation extends React.Component {
 	}
 
 
-	/**
-	 * Find parent of mached nav item
-	 */
-	
 
 
 
