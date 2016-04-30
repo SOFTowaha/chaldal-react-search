@@ -74,9 +74,7 @@ export default class Navigation extends React.Component {
 		}
 
 		var fullData = _.union(parentNav,matchNav,machedParentNav);
-		
-		console.log(navData);
-	
+			
 		return fullData;
 	}
 
