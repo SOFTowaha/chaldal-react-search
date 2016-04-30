@@ -1,16 +1,21 @@
 import React from "react"
-import jsonQ from "jsonq"
+import _ from "underscore"
 
 export default class Navigation extends React.Component {
 
 	renderNav() {
-		var rows = [];
 
+		if( this.props.navigations == undefined ) return (<p>Loading data...</p>);
 		var filteredData = this.filterNav(this.props.navigations, this.props.searchText);
 		var navigation = this.generateTree(filteredData);
-
 		return this.generateElem(navigation.children);
+
 	}
+
+
+
+
+
 
 	/**
 	 * Filter Navigation with search text
@@ -29,6 +34,7 @@ export default class Navigation extends React.Component {
 
 			if( nav.ParentCategoryId == 0 ) {
 				parentNav.push(nav);
+				return;
 			}
 
 			if( nav.Name.toLowerCase().indexOf(searchText) !== -1 ) {
@@ -37,39 +43,43 @@ export default class Navigation extends React.Component {
 			
 		});
 
-
-
 		// Find parents of matched nav
 		var machedParentNav = [];
 		
 		if( matchNav.length > 0 ) {
 			matchNav.forEach((matchedItem)=>{
+
 				// Parent item - don't need find parent
 				if( matchedItem.ParentCategoryId == 0 ){
 					return;
 				}
 
 
+				var navDataSize = navData.length;
+				for( var i = 0; i < navDataSize; i++ ) {
+					
+					var item = navData[i];
 
-				navData.forEach((item)=>{
 					// Ignore top level items
 					if( item.ParentCategoryId == 0 ) {
-						return;
+						continue;
 					}
 					if( item.Id == matchedItem.ParentCategoryId ) {
 						machedParentNav.push(item);
-						//findParent(data, item);
+						break;
 					}
-				})
 
+				}
 			})
 		}
 
-		navData = jsonQ.union(parentNav,machedParentNav,matchNav);
-		//console.log(navData);
+		var fullData = _.union(parentNav,matchNav,machedParentNav);
+		
+		console.log(navData);
 	
-		return navData;
+		return fullData;
 	}
+
 
 
 
@@ -82,7 +92,8 @@ export default class Navigation extends React.Component {
 
 	    // build hierarchical source.
 	    var map = {}
-	    for(var i = 0; i < data.length; i++){
+	    var dataSize = data.length;
+	    for(var i = 0; i < dataSize; i++){
 	        var obj = data[i]
 	        if(!(obj.Id in map)){
 	            map[obj.Id] = obj
@@ -105,6 +116,10 @@ export default class Navigation extends React.Component {
 	    }
 	    return map['-']
 	}
+
+
+
+
 
 
 
@@ -134,9 +149,9 @@ export default class Navigation extends React.Component {
 
 	render() {
 		return (
-			<ul>
+			<div>
 				{this.renderNav()}
-			</ul>
+			</div>
 		);
 	}
 }
